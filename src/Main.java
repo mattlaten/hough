@@ -22,9 +22,9 @@ public class Main {
 		BufferedImage thresh = EdgeDetector.threshold(out, 127);
 		FileIO.write("output/test2.gif", thresh);
 		
-		//Accumulator acc = new Accumulator(out, 10, 15);
-		//BufferedImage accImage = acc.process();
-		//FileIO.write("output/test3.gif", accImage);
+		Accumulator acc = new Accumulator(out, 10, 60);
+		BufferedImage accImage = acc.buildAccumulator();
+		FileIO.write("output/test3.gif", accImage);
 		 /*
 	    JFrame TheFrame = new JFrame("¼v¹³¡G¼e " + width + " °ª " + height);   
 	   

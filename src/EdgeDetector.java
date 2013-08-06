@@ -4,6 +4,9 @@ import java.awt.image.BufferedImage;
 public class EdgeDetector {
 	BufferedImage image;
 	
+	public static final int BLACK = (255 << 24 | 0 << 16 | 0 << 8 | 0);
+	public static final int WHITE = (255 << 24 | 255 << 16 | 255 << 8 | 255);
+	
 	public EdgeDetector(BufferedImage image) {
 		this.image = image;
 	}
@@ -22,10 +25,10 @@ public class EdgeDetector {
 		for (i = 0; i < width; i++) {
 			for (j = 0; j < height; j++) {
 				output[i][j] = (input.getRGB(i, j) & 0xff0000) >> 16;//pixels[counter];
-				System.out.print(output[i][j] + " ");		
-				counter++;
+				//System.out.print(output[i][j] + " ");		
+				//counter++;
 			}
-			System.out.println();
+			//System.out.println();
 		}
 
 		Gx = new int[width][height];
@@ -57,10 +60,8 @@ public class EdgeDetector {
 				}
 			}
 		}
-		writeOut(input, Gx, "output/testx.gif");
-		writeOut(input, Gy, "output/testy.gif");
 		
-		counter = 0;
+		/*
 		for (int ii = 0; ii < width; ii++) {
 			for (int jj = 0; jj < height; jj++) {
 				// System.out.println(counter);
@@ -68,42 +69,20 @@ public class EdgeDetector {
 				counter++;
 			}
 		}
-
-		//BufferedImage outImg = new BufferedImage(width, height, input.getType());
-		System.out.println(input.getType());
-		System.out.println(BufferedImage.TYPE_BYTE_INDEXED);
-		//BufferedImage outImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-		//outImg.getRaster().setPixels(0, 0, width, height, pixels);
+		*/
 		return outImg;
 	}
 	
 	public static BufferedImage threshold(BufferedImage input, int value) {
 		int width = input.getWidth();
 		int height = input.getHeight();
-		//int[] pixels = new int[width * height];
-		//input.getRaster().getPixels(0, 0, width, height, pixels);
-		
-		int counter = 0;
-
 		BufferedImage outImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-		/*
-		while (counter < width * height) {
-			pixels[counter] = (pixels[counter] > value ? 255 : 0);
-			counter++;
-		}*/
-		
-		counter = 0;
-		
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
-				outImg.setRGB(i, j, (((input.getRGB(i, j) & 0xff0000) >> 16) > value ? (255 << 24 | 255 << 16 | 255 << 8 | 255) : (255 << 24 | 0 << 16 | 0 << 8 | 0)));
-				counter++;
+				outImg.setRGB(i, j, (((input.getRGB(i, j) & 0xff0000) >> 16) > value ? WHITE : BLACK));
+				//counter++;
 			}
 		}
-		
-		
-		//BufferedImage outImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-		//outImg.getRaster().setPixels(0, 0, width, height, pixels);
 		return outImg;
 	}
 	
