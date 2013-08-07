@@ -18,6 +18,8 @@ public class Accumulator {
 	int [][][] acc;
 	int lower;
 	int upper;
+	int paddedwidth;
+	int paddedheight;
 	BufferedImage accImage;
 	BufferedImage circles;
 	BufferedImage overlay;
@@ -30,14 +32,16 @@ public class Accumulator {
 		this.height = input.getHeight();
 		this.lower = lower;
 		this.upper = upper;
-		acc = new int[upper-lower][height][width];
+		this.paddedwidth = width+2*upper;
+		this.paddedheight = height+2*upper;
+		acc = new int[upper-lower][paddedheight][paddedwidth];
 	}
 	
 	public BufferedImage buildAccumulator() {	
 		if (accImage == null) {
-			accImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-			for (int y = 0; y < height; y++) {
-				for (int x = 0; x < width; x++) {
+			accImage = new BufferedImage(paddedwidth, paddedheight, BufferedImage.TYPE_INT_ARGB);
+			for (int y = 0; y < paddedheight; y++) {
+				for (int x = 0; x < paddedwidth; x++) {
 					accImage.setRGB(x, y, BLACK);
 				}
 			}
@@ -49,16 +53,16 @@ public class Accumulator {
 					for (int x = 0; x < width; x++) {
 						if (input.getRGB(x, y) == WHITE) { 
 							// we want to draw the circle
-							drawCircle(x, y, radius);
+							drawCircle(x+upper, y+upper, radius);
 						}
 					}
 				}
 			}
 			
 			//summing across all radii
-			int sum [][] = new int [height][width];
-			for (int y = 0; y < height; y++) {
-				for (int x = 0; x < width; x++) {
+			int sum [][] = new int [paddedheight][paddedwidth];
+			for (int y = 0; y < paddedheight; y++) {
+				for (int x = 0; x < paddedwidth; x++) {
 					for (int r = 0; r < upper - lower; r++) {
 						sum[y][x] += acc[r][y][x];
 					}
@@ -67,15 +71,15 @@ public class Accumulator {
 			
 			//finding max
 			int maxVal = 0;
-			for (int y = 0; y < height; y++) {
-				for (int x = 0; x < width; x++) {
+			for (int y = 0; y < paddedheight; y++) {
+				for (int x = 0; x < paddedwidth; x++) {
 					maxVal = Math.max(maxVal, sum[y][x]);
 				}
 			}
 			
 			//normalizing and drawing image
-			for (int y = 0; y < height; y++) {
-				for (int x = 0; x < width; x++) {
+			for (int y = 0; y < paddedheight; y++) {
+				for (int x = 0; x < paddedwidth; x++) {
 					int intensity = 255*sum[y][x]/maxVal;
 					Color colour = new Color(intensity, intensity, intensity);
 					accImage.setRGB(x, y, colour.getRGB());
@@ -101,12 +105,12 @@ public class Accumulator {
 		
 		for (int r = 0; r < upper - lower; r++) {
 			int radius = r + lower;
-			for (int y = 0; y < height; y++) {
-				for (int x = 0; x < width; x++) {
+			for (int y = 0; y < paddedheight; y++) {
+				for (int x = 0; x < paddedwidth; x++) {
 					if (acc[r][y][x] > 1.8*Math.PI*radius) {
 						//it's the center a circle - sort of
-						overlay.setRGB(x, y, RED);
-						overlayCircle(x, y, radius);
+						overlay.setRGB(x-upper, y-upper, RED);
+						overlayCircle(x-upper, y-upper, radius);
 					}
 				}
 			}
@@ -174,8 +178,8 @@ public class Accumulator {
 	}
 	
 	private void drawPixel(int x, int y, int radius) {
-		if (x >= 0 && y >= 0 && x < width && y < height) {
+		//if (x >= 0 && y >= 0 && x < width && y < height) {
 			acc[radius-lower][y][x]++;
-		}
+		//}
 	}
 }

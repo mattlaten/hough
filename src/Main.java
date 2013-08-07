@@ -9,7 +9,7 @@ public class Main {
 		if (args.length > 0) {
 			filename = args[0];
 		} else {
-			filename = "data/test3.gif";
+			filename = "data/test0.gif";
 		}
 		BufferedImage image = FileIO.read(filename);
 		log.info(image.getHeight());
