@@ -5,37 +5,40 @@ import java.awt.image.BufferedImage;
 
 public class Accumulator {
 	public static final int BLACK = (255 << 24 | 0 << 16 | 0 << 8 | 0);
+	public static final int RED = (255 << 24 | 255 << 16 | 0 << 8 | 0);
 	public static final int WHITE = (255 << 24 | 255 << 16 | 255 << 8 | 255);
 	public static final int GRAY = (255 << 24 | 8 << 16 | 8 << 8 | 8);
 	
 	static Logger log = new Logger(Accumulator.class);
 	
+	BufferedImage original;
 	BufferedImage input;
 	int width;
 	int height;
-	int [][][] grid;
+	int [][][] acc;
 	int lower;
 	int upper;
-	BufferedImage accOutput;
+	BufferedImage accImage;
 	BufferedImage circles;
 	BufferedImage overlay;
 	
 	
-	public Accumulator(BufferedImage input, int lower, int upper) {
+	public Accumulator(BufferedImage original, BufferedImage input, int lower, int upper) {
+		this.original = original;
 		this.input = input;
 		this.width = input.getWidth();
 		this.height = input.getHeight();
 		this.lower = lower;
 		this.upper = upper;
-		grid = new int[upper-lower][height][width];
+		acc = new int[upper-lower][height][width];
 	}
 	
 	public BufferedImage buildAccumulator() {	
-		if (accOutput == null) {
-			accOutput = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		if (accImage == null) {
+			accImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 			for (int y = 0; y < height; y++) {
 				for (int x = 0; x < width; x++) {
-					accOutput.setRGB(x, y, BLACK);
+					accImage.setRGB(x, y, BLACK);
 				}
 			}
 			
@@ -57,7 +60,7 @@ public class Accumulator {
 			for (int y = 0; y < height; y++) {
 				for (int x = 0; x < width; x++) {
 					for (int r = 0; r < upper - lower; r++) {
-						sum[y][x] += grid[r][y][x];
+						sum[y][x] += acc[r][y][x];
 					}
 				}
 			}
@@ -75,19 +78,75 @@ public class Accumulator {
 				for (int x = 0; x < width; x++) {
 					int intensity = 255*sum[y][x]/maxVal;
 					Color colour = new Color(intensity, intensity, intensity);
-					accOutput.setRGB(x, y, colour.getRGB());
+					accImage.setRGB(x, y, colour.getRGB());
 				}
 			}
 
 		}
-		return accOutput;
+		return accImage;
 	}
 	
 	public void detect() {
-		if (accOutput == null) {
+		if (accImage == null) {
 			log.err("Accumulator not built yet");
 		}
+		circles = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		overlay = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
+				circles.setRGB(x, y, BLACK);
+				overlay.setRGB(x,y, original.getRGB(x, y));
+			}
+		}
 		
+		for (int r = 0; r < upper - lower; r++) {
+			int radius = r + lower;
+			for (int y = 0; y < height; y++) {
+				for (int x = 0; x < width; x++) {
+					if (acc[r][y][x] > 1.8*Math.PI*radius) {
+						//it's the center a circle - sort of
+						overlay.setRGB(x, y, RED);
+						overlayCircle(x, y, radius);
+					}
+				}
+			}
+		}
+		FileIO.write("output/overlay.gif", overlay);
+		FileIO.write("output/circles.gif", circles);
+		
+		//must build circles and overlay images
+		
+	}
+	
+	public void overlayCircle(int x0, int y0, int radius) {
+		int x = radius, y = 0;
+		int radiusError = 1 - x;
+
+		while (x >= y) {
+			overlayPixel(x + x0, y + y0, radius);
+			overlayPixel(y + x0, x + y0, radius);
+			overlayPixel(-x + x0, y + y0, radius);
+			overlayPixel(-y + x0, x + y0, radius);
+			overlayPixel(-x + x0, -y + y0, radius);
+			overlayPixel(-y + x0, -x + y0, radius);
+			overlayPixel(x + x0, -y + y0, radius);
+			overlayPixel(y + x0, -x + y0, radius);
+
+			y++;
+			if (radiusError < 0)
+				radiusError += 2 * y + 1;
+			else {
+				x--;
+				radiusError += 2 * (y - x + 1);
+			}
+		}
+	}
+	
+	private void overlayPixel(int x, int y, int radius) {
+		if (x >= 0 && y >= 0 && x < width && y < height) {
+			overlay.setRGB(x, y, RED);
+			circles.setRGB(x, y, RED);
+		}
 	}
 	
 	public void drawCircle(int x0, int y0, int radius) {
@@ -95,7 +154,6 @@ public class Accumulator {
 		int radiusError = 1 - x;
 
 		while (x >= y) {
-			//System.out.println(x + " >= " + y);
 			drawPixel(x + x0, y + y0, radius);
 			drawPixel(y + x0, x + y0, radius);
 			drawPixel(-x + x0, y + y0, radius);
@@ -117,7 +175,7 @@ public class Accumulator {
 	
 	private void drawPixel(int x, int y, int radius) {
 		if (x >= 0 && y >= 0 && x < width && y < height) {
-			grid[radius-lower][y][x]++;
+			acc[radius-lower][y][x]++;
 		}
 	}
 }
