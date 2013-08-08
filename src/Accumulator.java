@@ -38,6 +38,7 @@ public class Accumulator {
 	}
 	
 	public BufferedImage buildAccumulator() {	
+		log.info("Building accumulator...");
 		if (accImage == null) {
 			accImage = new BufferedImage(paddedwidth, paddedheight, BufferedImage.TYPE_INT_ARGB);
 			for (int y = 0; y < paddedheight; y++) {
@@ -87,6 +88,7 @@ public class Accumulator {
 			}
 
 		}
+		log.info("Accumulator built successfully!");
 		return accImage;
 	}
 	
@@ -94,6 +96,7 @@ public class Accumulator {
 		if (accImage == null) {
 			log.err("Accumulator not built yet");
 		}
+		log.info("Detecting circles...");
 		circles = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 		overlay = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 		for (int y = 0; y < height; y++) {
@@ -107,17 +110,35 @@ public class Accumulator {
 			int radius = r + lower;
 			for (int y = 0; y < paddedheight; y++) {
 				for (int x = 0; x < paddedwidth; x++) {
-					if (acc[r][y][x] > 1.8*Math.PI*radius) {
-						//it's the center a circle - sort of
-						overlay.setRGB(x-upper, y-upper, RED);
-						overlayCircle(x-upper, y-upper, radius);
+					//compute percent of circle in image here
+					double vvis = 1.0;
+					double hvis = 1.0;
+					int xcenter = x-upper;
+					int ycenter = y-upper;
+					
+					if (Math.abs(xcenter) <= radius+2) {
+						hvis = (xcenter+radius)*Math.PI/4/(2*radius);
+					}
+					if (Math.abs(ycenter) <= radius+2) {
+						vvis = (ycenter+radius)*Math.PI/4/(2*radius);
+					}
+					if (Math.abs(width-xcenter) <= radius+2) {
+						hvis = (width-xcenter+radius)*Math.PI/4/(2*radius);
+					}
+					if (Math.abs(height-ycenter) <= radius+2) {
+						vvis = (height-ycenter+radius)*Math.PI/4/(2*radius);
+					}
+					//detect center of circle given how much of circle is in image
+					if (acc[r][y][x] > (vvis == 0 ? 1 : vvis)*(hvis == 0 ? 1 : hvis)*1.8*Math.PI*radius) {
+						if (xcenter >= 0 && ycenter >= 0 && xcenter < width && ycenter < height) {
+							overlay.setRGB(xcenter, ycenter, RED);
+							overlayCircle(xcenter, ycenter, radius);
+						}
 					}
 				}
 			}
 		}
-		FileIO.write("output/overlay.gif", overlay);
-		FileIO.write("output/circles.gif", circles);
-		
+		log.info("Circles detected!");
 		//must build circles and overlay images
 		
 	}
@@ -178,8 +199,6 @@ public class Accumulator {
 	}
 	
 	private void drawPixel(int x, int y, int radius) {
-		//if (x >= 0 && y >= 0 && x < width && y < height) {
-			acc[radius-lower][y][x]++;
-		//}
+		acc[radius-lower][y][x]++;
 	}
 }

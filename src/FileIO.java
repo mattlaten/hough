@@ -10,6 +10,7 @@ public class FileIO {
 	public static BufferedImage read(String filename) {
 		BufferedImage image = null;
 		try {
+			log.info("Reading image from " + filename);
 			image = ImageIO.read(new File(filename));
 		} catch (IOException e) {
 			log.err(e.getMessage());
@@ -19,8 +20,10 @@ public class FileIO {
 	
 	public static void write(String filename, BufferedImage image) {
 		try {
-		    FileOutputStream outFile = new FileOutputStream(filename);   
-		    ImageIO.write(image,"gif",outFile);   
+		    File outFile = new File(filename);
+		    outFile.mkdirs();
+		    log.info("Writing image to " + filename);
+		    ImageIO.write(image,"gif",outFile);
 		} catch (IOException e) {
 			log.err(e.getMessage());
 		}
